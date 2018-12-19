@@ -1,5 +1,6 @@
 $(document).ready(function () {
 
+    var books = $("#books");
 
     //Getting Data from database
     function getAjax() {
@@ -9,21 +10,22 @@ $(document).ready(function () {
             type: "GET",
             dataType: "json"
         }).done(function (result) {
-            console.log(result[0].title);
+
 
             for (var i = 0; i < result.length; i++) {
-                removeAllBlankOrNull(book);
-                var book = result[i];
-                removeAllBlankOrNull(book);
-                var tr = $("<tr>").appendTo($('#books'));
 
-                $("<td id='bookId'>").html(book.id).appendTo(tr);
+                var book = result[i];
+
+                var tr = $("<tr>").appendTo(books.find('tbody'));
+
+                $("<td id='bookId'>").html(book.id).hide().appendTo(tr);
                 $("<td>").html(book.author).appendTo(tr);
                 $("<td class = 'title myButton'></td>").html(book.title).appendTo(tr);
                 $("<td>").html(book.type).appendTo(tr);
+                $("<td><a href='' class='link'>Delete</a></td>").appendTo(tr);
 
-                var descriptionTr = $("<tr>").hide().appendTo($('#books'));
-                $("<td colspan='4'></td>").html("Tu będzie opis książki").appendTo(descriptionTr);
+                var descriptionTr = $("<tr>").hide().appendTo(books);
+                $("<td colspan='5'></td>").html("Tu będzie opis książki").appendTo(descriptionTr);
 
             }
 
@@ -35,7 +37,7 @@ $(document).ready(function () {
     getAjax();
 
 //Description Row AJAX GET
-    $("#books").on("click", "td.title", function () {
+    books.on("click", "td.title", function () {
         var id = $(this).prev().prev().html();
 
         var descRow = $(this).parent().next();
@@ -48,7 +50,7 @@ $(document).ready(function () {
             dataType: "json"
         }).done(function (result) {
 
-            descRow.children().eq(0).html("Publisher: " + result.publisher + "                   ISBN:  " + result.isbn);
+            descRow.children().eq(0).html("ID: " + result.id + " Publisher: " + result.publisher + " ISBN:  " + result.isbn);
 
         }).fail(function (xhr, status, err) {
             console.log(err);
@@ -59,7 +61,6 @@ $(document).ready(function () {
     //Submit Data
     $("#addBook").on("submit", function (event) {
         event.preventDefault();
-        console.log("dodane");
 
         var form = $(this),
             url = form.attr("action"),
@@ -72,18 +73,10 @@ $(document).ready(function () {
                 value = input.val();
 
             data[name] = value;
+
         });
 
 
-        // var existingBookIds = $("#bookId");
-        //
-        // existingBookIds.each(function (elem) {
-        //     if (parseInt(elem) === parseInt(id)) {
-        //         //form.find("input[name='id']").css("color", "red").text("This Book ID exists");
-        //         form.append($("<div>Niepoprawne ID</div>"));
-        //     } else {
-
-        console.log(data);
         $.ajax({
             headers: {
                 'Accept': 'application/json',
@@ -94,35 +87,53 @@ $(document).ready(function () {
             type: type,
             dataType: "json"
         }).done(function (result) {
-            console.log(result);
+            console.log("Book added to database");
 
         }).fail(function (xhr, status, err) {
             console.log(err);
         });
-        //
-        //
-        //
-        //     }
-        //
-        // })
 
-        getAjax();
+        //Clearing form after submission
+        form.get(0).reset();
+
+        reloadList();
 
         return false;
+    });
+
+    //Delete Book
+    books.on("click", ".link", function (event) {
+        event.preventDefault();
+
+        var book = $(this).parent().parent().find("#bookId").text();
+
+
+        $.ajax({
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            url: "http://localhost:8282/books/" + book,
+            data: {},
+            type: "DELETE",
+            dataType: "json"
+        }).done(function (result) {
+            console.log("Book deleted from database");
+
+        }).fail(function (xhr, status, err) {
+            console.log(err);
+        });
+
+        reloadList();
+
     })
 
+    //Getting new list
+    function reloadList() {
+        $('#books tbody').empty();
+        getAjax();
+    };
 
-    //Remove empty
-    function removeAllBlankOrNull(JsonObj) {
-        $.each(JsonObj, function(key, value) {
-            if (value === "" || value === null) {
-                delete JsonObj[key];
-            } else if (typeof(value) === "object") {
-                JsonObj[key] = removeAllBlankOrNull(value);
-            }
-        });
-        return JsonObj;
-    }
 
-})
-;
+
+});
