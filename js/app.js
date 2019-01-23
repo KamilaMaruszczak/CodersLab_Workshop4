@@ -5,7 +5,7 @@ $(document).ready(function () {
     //Getting Data from database
     function getAjax() {
         $.ajax({
-            url: "http://localhost:8282/books",
+            url: "http://localhost:8080/books/allBooks",
             data: {},
             type: "GET",
             dataType: "json"
@@ -35,7 +35,7 @@ $(document).ready(function () {
     }
 
     getAjax();
-
+itignore
 //Description Row AJAX GET
     books.on("click", "td.title", function () {
         var id = $(this).prev().prev().html();
@@ -44,7 +44,7 @@ $(document).ready(function () {
         descRow.toggle();
 
         $.ajax({
-            url: "http://localhost:8282/books/" + id,
+            url: "http://localhost:8080/books/" + id,
             data: {},
             type: "GET",
             dataType: "json"
